@@ -125,14 +125,46 @@ class QuizGame:
         return value
 
     def print_menu(self):
-         print("=" * 40)
-         print("quiz game")
-         print("1. 퀴즈풀기")
-         print("2. 퀴즈추가")
-         print("3. 퀴즈목록")
-         print("4. 점수확인")
-         print("5. 종료")
-         print("=" * 40)
+            print("=" * 40)
+            print(".         quiz game         ")
+            print("1. Play quiz")
+            print("2. Add quiz")
+            print("3. List quizzes")
+            print("4. Show best score")
+            print("5. Exit")
+            print("=" * 40)
+
+    def play_quiz(self):
+        if not self.quizzes:
+            print("\nNo quizzes registered. Please add one first.")
+            return
+
+        print(f"\nStarting quiz! ({len(self.quizzes)} questions total)")
+        correct_count = 0
+
+        for i, quiz in enumerate(self.quizzes, start=1):
+            print("-" * 40)
+            quiz.display(index=i)
+
+            user_answer = self.input("Your answer: ", 1, len(quiz.choices))
+            while user_answer is None:
+                user_answer = self.input("Your answer: ", 1, len(quiz.choices))
+
+            if quiz.check_answer(user_answer):
+                print("Correct!")
+                correct_count += 1
+            else:
+                print(f"Wrong. The correct answer was {quiz.answer}.")
+
+        total = len(self.quizzes)
+        score = round(correct_count / total * 100)
+        print("=" * 40)
+        print(f"Result: {correct_count}/{total} correct! ({score} points)")
+
+        if score > self.best_score:
+            self.best_score = score
+            print("New best score!")
+        print("=" * 40)
 
     def run(self):
         """ Main menu loop. Handles exit safely"""
@@ -144,7 +176,7 @@ class QuizGame:
                     continue
 
                 if choice == 1:
-                    print("")
+                    self.play_quiz()
                 elif choice == 2:
                     print("")     
                 elif choice == 3:
