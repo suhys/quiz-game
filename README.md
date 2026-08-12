@@ -57,3 +57,6 @@ quiz-game/
 - 파일이 없거나 손상된 경우, 프로그램은 기본 퀴즈 데이터로 자동 복구합니다.
 ```
 
+
+## Note
+This line was added for the clone/pull exercise.
