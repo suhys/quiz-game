@@ -49,7 +49,7 @@ class QuizGame:
         try:
             while True:
                 self.print_menu()
-                choice = self.get_int_input("선택: ", self.min_menu,self.max_menu_option)
+                choice = self.input("선택: ", self.min_menu_option,self.max_menu_option)
                 if choice is None:
                     continue
 
