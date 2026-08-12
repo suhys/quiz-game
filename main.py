@@ -166,6 +166,41 @@ class QuizGame:
             print("New best score!")
         print("=" * 40)
 
+    def add_quiz(self):
+        print("\nAdding a new quiz.")
+
+        question = input("Enter the question: ").strip()
+        if question == "":
+            print("Question is empty. Cancelling.")
+            return
+
+        choices = []
+        for i in range(1, 5):
+            c = input(f"Choice {i}: ").strip()
+            if c == "":
+                print("A choice is empty. Cancelling.")
+                return
+            choices.append(c)
+
+        answer = self.input("Correct choice number (1-4): ", 1, 4)
+        while answer is None:
+            answer = self.input("Correct choice number (1-4): ", 1, 4)
+
+        new_quiz = Quiz(question, choices, answer)
+        self.quizzes.append(new_quiz)
+        print("\nQuiz added!")
+
+    def list_quizzes(self):
+        if not self.quizzes:
+            print("\nNo quizzes registered.")
+            return
+
+        print(f"\nRegistered quizzes ({len(self.quizzes)} total)")
+        print("-" * 40)
+        for i, quiz in enumerate(self.quizzes, start=1):
+            print(f"[{i}] {quiz.question}")
+        print("-" * 40)        
+
     def run(self):
         """ Main menu loop. Handles exit safely"""
         try:
@@ -178,9 +213,9 @@ class QuizGame:
                 if choice == 1:
                     self.play_quiz()
                 elif choice == 2:
-                    print("")     
+                    self.add_quiz()    
                 elif choice == 3:
-                    print("")   
+                    self.list_quizzes()   
                 elif choice == 4:
                     print("")   
                 elif choice == 5:
