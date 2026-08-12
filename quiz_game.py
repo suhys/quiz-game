@@ -1,6 +1,8 @@
 import json
 import os
+import random
 
+from datetime import datetime
 from quiz import Quiz
 
 DATA_FILE = "state.json"
@@ -13,8 +15,9 @@ class QuizGame:
         self.data_file = data_file
         self.quizzes = self._default_quizzes()
         self.best_score = 0
+        self.score_history = []  
         self.load_data()
-        self.max_menu_option = 5
+        self.max_menu_option = 7
         self.min_menu_option = 1
 
     def load_data(self):
@@ -23,6 +26,7 @@ class QuizGame:
             print("No saved data found. Starting with default quizzes.")
             self.quizzes = self._default_quizzes()
             self.best_score = 0
+            self.score_history = []
             return
 
         try:
@@ -30,6 +34,7 @@ class QuizGame:
                 data = json.load(f)
             self.quizzes = [Quiz.from_dict(q) for q in data.get("quizzes", [])]
             self.best_score = data.get("best_score", 0)
+            self.score_history = data.get("score_history", [])
             if not self.quizzes:
                 self.quizzes = self._default_quizzes()
             print(
@@ -40,12 +45,14 @@ class QuizGame:
             print("Data file is corrupted. Resetting to default quizzes.")
             self.quizzes = self._default_quizzes()
             self.best_score = 0
+            self.score_history = []
 
     def save_data(self):
         """Save the current quiz list and best score to state.json."""
         data = {
             "quizzes": [q.to_dict() for q in self.quizzes],
             "best_score": self.best_score,
+            "score_history": self.score_history, 
         }
         try:
             with open(self.data_file, "w", encoding="utf-8") as f:
@@ -102,27 +109,21 @@ class QuizGame:
         return [Quiz(q, c, a, h) for q, c, a, h in raw]
 
     @staticmethod
-    # user input
-    def input(user_menu_input, min_value, max_value):
-        """
-        Get an integer input within min and max value
-        - Strips whitespace, catches conversion failures, out-of-range, and empty input.
-        - Returns None on any problem so the user can re-prompt
-        """
-        user_input = input(user_menu_input).strip()
+    def input(prompt, min_value, max_value):
+        raw = input(prompt).strip()
 
-        if user_input =="":
-            print(f"⚠️ 입력이 비어있습니다. {min_value}-{max_value} 사이의 숫자를 입력하세요.")
+        if raw == "":
+            print(f"Input is empty. Enter a number between {min_value}-{max_value}.")
             return None
 
         try:
-            value = int(user_input)
+            value = int(raw)
         except ValueError:
-            print(f"⚠️ 잘못된 입력입니다. {min_value}-{max_value} 사이의 숫자를 입력하세요.")
+            print(f"Invalid input. Enter a number between {min_value}-{max_value}.")
             return None
 
         if not (min_value <= value <= max_value):
-            print(f"⚠️ 잘못된 입력입니다. {min_value}-{max_value} 사이의 숫자를 입력하세요.")
+            print(f"Invalid input. Enter a number between {min_value}-{max_value}.")
             return None
 
         return value
@@ -131,12 +132,15 @@ class QuizGame:
 
     def print_menu(self):
             print("=" * 40)
-            print(".         quiz game         ")
+            print("        Quiz Game        ")
+            print("=" * 40)
             print("1. Play quiz")
             print("2. Add quiz")
             print("3. List quizzes")
-            print("4. Show best score")
-            print("5. Exit")
+            print("4. Delete quiz")
+            print("5. Show best score")
+            print("6. Show score history")
+            print("7. Exit")
             print("=" * 40)
 
     def run(self):
@@ -155,8 +159,12 @@ class QuizGame:
                 elif choice == 3:
                     self.list_quizzes()   
                 elif choice == 4:
-                    self.show_score()  
+                    self.delete_quiz()  
                 elif choice == 5:
+                    self.show_score()
+                elif choice == 6:
+                    self.show_score_history()        
+                elif choice == 7:
                     self.save_data()
                     print("\nExiting the game. Goodbye!") 
                     break
@@ -171,16 +179,23 @@ class QuizGame:
             print("\nNo quizzes registered. Please add one first.")
             return
 
-        print(f"\nStarting quiz! ({len(self.quizzes)} questions total)")
+        max_count = len(self.quizzes)
+        count = self.input(f"How many questions? (1-{max_count}): ", 1, max_count)
+        while count is None:
+            count = self.input(f"How many questions? (1-{max_count}): ", 1, max_count)
+
+        quiz_order = self.quizzes.copy()
+        random.shuffle(quiz_order)
+        selected = quiz_order[:count]
+
+        print(f"\nStarting quiz! ({count} questions)")
         correct_count = 0
 
-        for i, quiz in enumerate(self.quizzes, start=1):
+        for i, quiz in enumerate(selected, start=1):
             print("-" * 40)
             quiz.display(index=i)
 
-            user_answer = self.input("Your answer: ", 1, len(quiz.choices))
-            while user_answer is None:
-                user_answer = self.input("Your answer: ", 1, len(quiz.choices))
+            user_answer = self._get_answer_with_hint(quiz)
 
             if quiz.check_answer(user_answer):
                 print("Correct!")
@@ -188,16 +203,51 @@ class QuizGame:
             else:
                 print(f"Wrong. The correct answer was {quiz.answer}.")
 
-        total = len(self.quizzes)
-        score = round(correct_count / total * 100)
+        score = round(correct_count / count * 100)
         print("=" * 40)
-        self.save_data()
-        print(f"Result: {correct_count}/{total} correct! ({score} points)")
+        print(f"Result: {correct_count}/{count} correct! ({score} points)")
 
         if score > self.best_score:
             self.best_score = score
             print("New best score!")
+
+        self.score_history.append({
+            "score": score,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        })
+        self.save_data()
         print("=" * 40)
+
+    def _get_answer_with_hint(self, quiz):
+        """
+        Get the user's answer for a quiz. Typing 'h' shows a hint
+        (bonus feature) instead of counting as an answer attempt.
+        """
+        while True:
+            raw = input("Your answer (or 'h' for a hint): ").strip()
+
+            if raw.lower() == "h":
+                if quiz.hint:
+                    print(f"Hint: {quiz.hint}")
+                else:
+                    print("No hint available for this question.")
+                continue
+
+            if raw == "":
+                print(f"Input is empty. Enter a number between 1-{len(quiz.choices)}.")
+                continue
+
+            try:
+                value = int(raw)
+            except ValueError:
+                print(f"Invalid input. Enter a number between 1-{len(quiz.choices)}.")
+                continue
+
+            if not (1 <= value <= len(quiz.choices)):
+                print(f"Invalid input. Enter a number between 1-{len(quiz.choices)}.")
+                continue
+
+            return value
 
     # ---------- Feature 2: add quiz ----------
 
@@ -217,14 +267,16 @@ class QuizGame:
                 return
             choices.append(c)
 
-        answer = self.input("Correct choice number (1-4): ", 1, 4)
+        answer = self.input(f"Correct choice number (1-4): ", 1, 4)
         while answer is None:
-            answer = self.input("Correct choice number (1-4): ", 1, 4)
+            answer = self.input(f"Correct choice number (1-4): ", 1, 4)
 
-        new_quiz = Quiz(question, choices, answer)
+        hint = input("Hint (optional, press Enter to skip): ").strip()
+
+        new_quiz = Quiz(question, choices, answer, hint)
         self.quizzes.append(new_quiz)
-        print("\nQuiz added!")
         self.save_data()
+        print("\nQuiz added!")
 
     # ---------- Feature 3: list quizzes ----------
 
@@ -239,11 +291,44 @@ class QuizGame:
             print(f"[{i}] {quiz.question}")
         print("-" * 40)  
 
-    # ---------- Feature 4: show best score ----------
+    # ---------- Feature 4 (bonus): delete quiz ----------
+
+    def delete_quiz(self):
+        if not self.quizzes:
+            print("\nNo quizzes registered.")
+            return
+
+        self.list_quizzes()
+        index = self.input(
+            f"Number to delete (1-{len(self.quizzes)}): ", 1, len(self.quizzes)
+        )
+        while index is None:
+            index = self.input(
+                f"Number to delete (1-{len(self.quizzes)}): ", 1, len(self.quizzes)
+            )
+
+        removed = self.quizzes.pop(index - 1)
+        self.save_data()
+        print(f"\nDeleted: {removed.question}")
+
+    # ---------- Feature 5: show best score ----------
 
     def show_score(self):
         if self.best_score == 0:
             print("\nYou haven't played yet. Try a quiz first!")
             return
         print(f"\nBest score: {self.best_score}")          
+
+    # ---------- Feature 6 (bonus): score history ----------
+
+    def show_score_history(self):
+        if not self.score_history:
+            print("\nNo score history yet.")
+            return
+
+        print(f"\nScore history ({len(self.score_history)} entries)")
+        print("-" * 40)
+        for i, entry in enumerate(self.score_history, start=1):
+            print(f"[{i}] {entry['date']} - {entry['score']} points")
+        print("-" * 40)
 
