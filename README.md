@@ -60,3 +60,5 @@ quiz-game/
 
 ## Note
 This line was added for the clone/pull exercise.
+
+## Note #오후
