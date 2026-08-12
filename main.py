@@ -51,6 +51,54 @@ class QuizGame:
         self.min_menu_option = 1
 
     @staticmethod
+    def _default_quizzes():
+        """Default 6 quizzes (Programming / IT trivia) used when no file exists."""
+        raw = [
+            (
+                "Who created Python?",
+                ["Guido van Rossum", "Linus Torvalds", "Dennis Ritchie", "James Gosling"],
+                1,
+                "His nickname was 'BDFL' (Benevolent Dictator For Life).",
+            ),
+            (
+                "What does HTML stand for?",
+                [
+                    "Hyper Text Markup Language",
+                    "High Tech Modern Language",
+                    "Home Tool Markup Language",
+                    "Hyperlink and Text Markup Language",
+                ],
+                1,
+                "A markup language used to structure web pages.",
+            ),
+            (
+                "Which Git command clones a remote repository locally?",
+                ["git pull", "git clone", "git fetch", "git push"],
+                2,
+                "Used when downloading a repository for the first time.",
+            ),
+            (
+                "Which of these is NOT a built-in Python data type?",
+                ["list", "dict", "array", "tuple"],
+                3,
+                "This one requires importing a standard library module.",
+            ),
+            (
+                "What does HTTP status code 404 mean?",
+                ["Server error", "Success", "Not found", "Unauthorized"],
+                3,
+                "It means the requested resource doesn't exist on the server.",
+            ),
+            (
+                "Which is NOT one of the 4 pillars of OOP?",
+                ["Encapsulation", "Inheritance", "Polymorphism", "Compilation"],
+                4,
+                "This is the process of translating code into machine code.",
+            ),
+        ]
+        return [Quiz(q, c, a, h) for q, c, a, h in raw]
+
+    @staticmethod
     # user input
     def input(user_menu_input, min_value, max_value):
         """
