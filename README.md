@@ -98,10 +98,10 @@ quiz-game/
 퀴즈 풀기 기능(`play_quiz`)은 `feature/play-quiz` 브랜치에서 작업한 뒤 `main`에 병합(`--no-ff` 방식)했습니다. 기능 하나를 별도 브랜치에서 완성하고 검증한 뒤 `main`에 합치면, 작업 중간 상태가 `main`에 섞이지 않아 언제든 `main`을 안전하게 유지할 수 있습니다. `--no-ff`를 사용해 fast-forward로 병합 이력이 사라지지 않고, "브랜치를 나눠 작업했다"는 기록(merge commit)이 히스토리에 명시적으로 남도록 했습니다.
  
 브랜치+병합 증거:
-![git log graph](screenshots/git-log-graph.png)
+![git log graph](/screenshot/git-log-graph.png)
  
 clone/pull 실습 증거:
-![clone pull](docs/screenshots/clone-pull.png)
+![clone pull](/screenshot/clone-pull.png)
  
 ### 확장성 — 퀴즈가 1,000개 이상으로 늘어난다면
 현재 구조는 `self.quizzes`가 파이썬 리스트이고, 조회/출제는 순차 반복(`for`)으로 처리합니다. 문제 수백~수천 개 규모까지는 이 방식으로도 체감 성능 차이가 없지만, 데이터가 훨씬 커지면 다음 한계가 있습니다.

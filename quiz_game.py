@@ -13,12 +13,11 @@ class QuizGame:
     # create quizzes list and initial setting
     def __init__(self, data_file=DATA_FILE):
         self.data_file = data_file
-        self.quizzes = self._default_quizzes()
         self.best_score = 0
         self.score_history = []  
-        self.load_data()
         self.max_menu_option = 7
         self.min_menu_option = 1
+        self.load_data()
 
     def load_data(self):
         """Load data from state.json. Fall back to defaults if missing or corrupted."""
@@ -35,12 +34,15 @@ class QuizGame:
             self.quizzes = [Quiz.from_dict(q) for q in data.get("quizzes", [])]
             self.best_score = data.get("best_score", 0)
             self.score_history = data.get("score_history", [])
+
             if not self.quizzes:
                 self.quizzes = self._default_quizzes()
+
             print(
                 f"Loaded saved data. "
                 f"({len(self.quizzes)} quizzes, best score {self.best_score})"
             )
+            
         except (json.JSONDecodeError, KeyError, TypeError, OSError):
             print("Data file is corrupted. Resetting to default quizzes.")
             self.quizzes = self._default_quizzes()
